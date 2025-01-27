@@ -1,4 +1,4 @@
-package list;
+package basics_list;
 
 public class Tarefa {
 	

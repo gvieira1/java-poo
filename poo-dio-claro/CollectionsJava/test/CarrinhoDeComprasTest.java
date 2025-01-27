@@ -1,6 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
-import list.CarrinhoDeCompras;
+
+import basics_list.CarrinhoDeCompras;
 
 class CarrinhoDeComprasTest {
 
