@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,13 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.ifsp.contacts_api.model.Contact;
 import br.ifsp.contacts_api.repository.ContactRepository;
+import jakarta.validation.Valid;
 
 /**
  * Classe responsável por mapear as rotas/endpoints relacionados
  * aos contatos. Cada método abaixo corresponde a uma operação
  * em nosso sistema.
- * 
- * @RestController: Indica que esta classe é um controlador 
+ *
+ * @RestController: Indica que esta classe é um controlador
  *                  responsável por responder requisições REST.
  * @RequestMapping("/api/contacts"): Indica o caminho base.
  */
@@ -35,7 +37,7 @@ public class ContactController {
 
     /**
      * @Autowired permite que o Spring "injete" automaticamente
-     * uma instância de ContactRepository aqui, 
+     * uma instância de ContactRepository aqui,
      * sem que precisemos criar manualmente.
      */
     @Autowired
@@ -43,7 +45,7 @@ public class ContactController {
 
     /**
      * Método para obter todos os contatos.
-     * 
+     *
      * @GetMapping indica que este método vai responder a chamadas HTTP GET.
      * Exemplo de acesso: GET /api/contacts
      */
@@ -54,8 +56,8 @@ public class ContactController {
 
     /**
      * Método para obter um contato específico pelo seu ID.
-     * 
-     * @PathVariable "amarra" a variável {id} da URL 
+     *
+     * @PathVariable "amarra" a variável {id} da URL
      * ao parâmetro do método.
      * Exemplo de acesso: GET /api/contacts/1
      */
@@ -65,7 +67,7 @@ public class ContactController {
         return contactRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contato não encontrado: " + id));
     }
-    
+
     @GetMapping("/search")
     public List<Contact> searchContactsByName(@RequestParam String name) {
         // Chama o método no repositório para buscar os contatos pelo nome
@@ -74,19 +76,21 @@ public class ContactController {
 
     /**
      * Método para criar um novo contato.
-     * 
+     *
      * @PostMapping indica que este método responde a chamadas HTTP POST.
-     * @RequestBody indica que o objeto Contact será preenchido 
+     * @RequestBody indica que o objeto Contact será preenchido
      * com os dados JSON enviados no corpo da requisição.
      */
+    
     @PostMapping
-    public Contact createContact(@RequestBody Contact contact) {
-        return contactRepository.save(contact);
+    public ResponseEntity<Contact> createContact(@Valid @RequestBody Contact contact) { //adicionar validação com @Valid
+        Contact savedContact = contactRepository.save(contact);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedContact);
     }
 
     /**
      * Método para atualizar um contato existente.
-     * 
+     *
      * @PutMapping indica que este método responde a chamadas HTTP PUT.
      * Exemplo de acesso: PUT /api/contacts/1
      */
@@ -104,7 +108,7 @@ public class ContactController {
         // Salvar alterações
         return contactRepository.save(existingContact);
     }
-    
+
     @PatchMapping("/{id}")
     public ResponseEntity<Contact> updatePartialContact(@PathVariable Long id, @RequestBody Contact updatedContact) {
     	// Buscar o contato existente
@@ -117,12 +121,15 @@ public class ContactController {
 
     	// Atualizar os campos se existirem
     	Contact contact = existingContact.get();
-    	if (updatedContact.getNome() != null)
-    		contact.setNome(updatedContact.getNome());
-    	if (updatedContact.getTelefone() != null)
-    		contact.setTelefone(updatedContact.getTelefone());
-    	if (updatedContact.getEmail() != null)
-    		contact.setEmail(updatedContact.getEmail());
+    	if (updatedContact.getNome() != null) {
+			contact.setNome(updatedContact.getNome());
+		}
+    	if (updatedContact.getTelefone() != null) {
+			contact.setTelefone(updatedContact.getTelefone());
+		}
+    	if (updatedContact.getEmail() != null) {
+			contact.setEmail(updatedContact.getEmail());
+		}
 
     	// Salvar alterações
     	Contact updated = contactRepository.save(contact);
@@ -132,7 +139,7 @@ public class ContactController {
 
     /**
      * Método para excluir um contato pelo ID.
-     * 
+     *
      * @DeleteMapping indica que este método responde a chamadas HTTP DELETE.
      * Exemplo de acesso: DELETE /api/contacts/1
      */
