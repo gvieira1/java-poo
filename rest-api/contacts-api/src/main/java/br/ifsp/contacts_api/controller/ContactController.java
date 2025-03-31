@@ -1,10 +1,11 @@
 package br.ifsp.contacts_api.controller;
 
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,8 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 import br.ifsp.contacts_api.dto.ContactDTO;
 import br.ifsp.contacts_api.repository.ContactRepository;
 import br.ifsp.contacts_api.service.ContactService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
- 
+
 /**
  * Classe responsável por mapear as rotas/endpoints relacionados
  * aos contatos. Cada método abaixo corresponde a uma operação
@@ -46,7 +48,7 @@ public class ContactController {
      */
     @Autowired
 	public ContactRepository contactRepository;
-    
+
     @Autowired
     private ContactService contactService;
 
@@ -56,9 +58,10 @@ public class ContactController {
 	 * @GetMapping indica que este método vai responder a chamadas HTTP GET.
 	 * Exemplo de acesso: GET /api/contacts
 	 */
-	@GetMapping
-	public List<ContactDTO> getAllContacts() {
-		return contactService.getAllContacts();
+	@Operation(summary = "Get all contacts")
+    @GetMapping
+	public ResponseEntity<Page<ContactDTO>> getAllContacts(Pageable pageable) {
+		return ResponseEntity.ok(contactService.getAllContacts(pageable));
 	}
 
     /**
@@ -68,16 +71,16 @@ public class ContactController {
      * ao parâmetro do método.
      * Exemplo de acesso: GET /api/contacts/1
      */
-    @GetMapping("/{id}")
+	@Operation(summary = "Get a contact by its ID")
+	@GetMapping("/{id}")
     public ContactDTO getContactById(@PathVariable Long id) {
-        // findById retorna um Optional, então usamos orElseThrow
         return contactService.getContactById(id);
     }
 
-    @GetMapping("/search")
-    public List<ContactDTO> searchContactsByName(@RequestParam String name) {
-        // Chama o método no repositório para buscar os contatos pelo nome
-        return contactService.searchContactsByName(name);
+	@Operation(summary = "Search for a contact based on the provided parameter")
+	@GetMapping("/search")
+    public ResponseEntity<Page<ContactDTO>> searchContactsByName(@RequestParam String name, Pageable pageable) {
+        return ResponseEntity.ok(contactService.searchContactsByName(name, pageable));
     }
 
     /**
@@ -87,8 +90,9 @@ public class ContactController {
      * @RequestBody indica que o objeto Contact será preenchido
      * com os dados JSON enviados no corpo da requisição.
      */
-    
-    @PostMapping
+
+    @Operation(summary = "Create a new contact")
+	@PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ContactDTO> createContact(@Valid @RequestBody ContactDTO contactDTO) { //adicionar validação com @Valid
         ContactDTO savedContact = contactService.save(contactDTO);
@@ -100,34 +104,15 @@ public class ContactController {
      *
      * @PutMapping indica que este método responde a chamadas HTTP PUT.
      * Exemplo de acesso: PUT /api/contacts/1
-     */  
+     */
+    @Operation(summary = "Update a contact by its ID")
     @PutMapping("/{id}")
     public ContactDTO updateContact(@PathVariable Long id, @Valid @RequestBody ContactDTO updatedContact) {
         return contactService.updateContact(id, updatedContact);
     }
 
 
-	/*
-	 * @PatchMapping("/{id}") public ResponseEntity<Contact>
-	 * updatePartialContact(@PathVariable Long id, @RequestBody Contact
-	 * updatedContact) { // Buscar o contato existente Optional<Contact>
-	 * existingContact = contactRepository.findById(id);
-	 * 
-	 * //uso de Optional para verificação de id válido if
-	 * (existingContact.isEmpty()) { return ResponseEntity.notFound().build(); }
-	 * 
-	 * // Atualizar os campos se existirem Contact contact = existingContact.get();
-	 * if (updatedContact.getNome() != null) {
-	 * contact.setNome(updatedContact.getNome()); } if (updatedContact.getTelefone()
-	 * != null) { contact.setTelefone(updatedContact.getTelefone()); } if
-	 * (updatedContact.getEmail() != null) {
-	 * contact.setEmail(updatedContact.getEmail()); }
-	 * 
-	 * // Salvar alterações Contact updated = contactRepository.save(contact);
-	 * return ResponseEntity.ok(updated);
-	 * 
-	 * }
-	 */
+    @Operation(summary = "Partially update a contact")
     @PatchMapping("/{id}")
     public ContactDTO updateContactPartial(@PathVariable Long id, @RequestBody Map<String, String> updates) {
         return contactService.updateContactPartial(id, updates);
@@ -140,6 +125,7 @@ public class ContactController {
      * @DeleteMapping indica que este método responde a chamadas HTTP DELETE.
      * Exemplo de acesso: DELETE /api/contacts/1
      */
+    @Operation(summary = "Delete a contact by its ID")
     @DeleteMapping("/{id}")
     public void deleteContact(@PathVariable Long id) {
     	contactService.deleteContact(id);

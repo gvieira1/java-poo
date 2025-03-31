@@ -1,8 +1,8 @@
 package br.ifsp.contacts_api.repository;
 
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import br.ifsp.contacts_api.model.Contact;
@@ -16,5 +16,5 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
 
 	//usa convenção de métodos de pesquisa do JPA para retornar itens que contem o item pesquisado ignorando maiúsculas e retornando
 	//lista vazia em caso de não obter resultado
-	List<Contact> findByNomeContainingIgnoreCase(String nome);
+	Page<Contact> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 }

@@ -43,7 +43,7 @@ public class Contact {
     @NotBlank(message = "O telefone é obrigatório")
     @Pattern(regexp = "\\d+", message = "O telefone deve conter apenas números")
     private String telefone;
-    
+
     @Email(message = "O e-mail deve ter um formato válido") // Garante que seja um e-mail válido
     @NotBlank(message = "O e-mail é obrigatório")
     private String email;
@@ -95,14 +95,14 @@ public class Contact {
 
     public void setAddresses(List<Address> addresses) {
         if (addresses != null) {
-            addresses.forEach(address -> address.setContact(this)); 
-            
-            if (this.addresses == null) { 
+            addresses.forEach(address -> address.setContact(this));
+
+            if (this.addresses == null) {
                 this.addresses = new ArrayList<>();
             }
-            
-            this.addresses.clear(); 
-            this.addresses.addAll(addresses);         
+
+            this.addresses.clear();
+            this.addresses.addAll(addresses);
         }
     }
 }

@@ -1,11 +1,11 @@
 package br.ifsp.contacts_api.service;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.ifsp.contacts_api.dto.ContactDTO;
@@ -22,11 +22,9 @@ public class ContactService {
 	@Autowired
 	private ModelMapper modelMapper;
 
-	public List<ContactDTO> getAllContacts() {
-		return contactRepository.findAll() 
-				.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+	public Page<ContactDTO> getAllContacts(Pageable pageable) {
+		return contactRepository.findAll(pageable)
+                .map(this::convertToDTO);
 	}
 
 	public ContactDTO getContactById(Long id) {
@@ -35,11 +33,9 @@ public class ContactService {
 		return convertToDTO(contact);
 	}
 
-	public List<ContactDTO> searchContactsByName(String name) {
-		return contactRepository.findByNomeContainingIgnoreCase(name)
-				.stream()
-				.map(this::convertToDTO)
-				.collect(Collectors.toList());
+	public Page<ContactDTO> searchContactsByName(String name, Pageable pageable) {
+		return contactRepository.findByNomeContainingIgnoreCase(name, pageable)
+				.map(this::convertToDTO);
 	}
 
 	public ContactDTO save(ContactDTO contactDTO) {

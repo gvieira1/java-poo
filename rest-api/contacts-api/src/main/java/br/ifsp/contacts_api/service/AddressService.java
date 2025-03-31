@@ -1,10 +1,9 @@
 package br.ifsp.contacts_api.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.ifsp.contacts_api.dto.AddressDTO;
@@ -16,36 +15,38 @@ import br.ifsp.contacts_api.repository.ContactRepository;
 
 @Service
 public class AddressService {
-	
+
 	@Autowired
 	private AddressRepository addressRepository;
-	
+
 	@Autowired
 	private ContactRepository contactRepository;
-	
+
 	@Autowired
 	private ModelMapper modelMapper;
 
 	public AddressDTO save(Long contactId, AddressDTO addressDTO) {
         Contact contact = contactRepository.findById(contactId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contato não encontrado: " + contactId));
-        
+
         Address address = convertToEntity(addressDTO);
-        address.setContact(contact);   
-        Address savedAddress = addressRepository.save(address);     
+        address.setContact(contact);
+        Address savedAddress = addressRepository.save(address);
 		return convertToDTO(savedAddress);
     }
-	
-	 public List<AddressDTO> getAddressesByContact(Long contactId) {
-	        Contact contact = contactRepository.findById(contactId)
-	                .orElseThrow(() -> new ResourceNotFoundException("Contato não encontrado: " + contactId));
-	        
-	        return contact.getAddresses()
-	        		.stream()
-	        		.map(this::convertToDTO)
-	        		.collect(Collectors.toList());
-	    }
-	
+
+	public Page<AddressDTO> getAddressesByContact(Long contactId, Pageable pageable) {
+
+		Page<Address> addresses = addressRepository.findByContactId(contactId, pageable);
+
+		if (addresses.isEmpty()) {
+			throw new ResourceNotFoundException("Contato não encontrado com ID: " + contactId);
+		}
+
+		return addresses.map(this::convertToDTO);
+
+	}
+
 	private AddressDTO convertToDTO(Address address) {
 	    return modelMapper.map(address, AddressDTO.class);
 	}

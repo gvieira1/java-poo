@@ -10,11 +10,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
     /**
      * Trata erros de validação de entrada (ex: campos inválidos no @Valid)
      */
@@ -31,17 +32,17 @@ public class GlobalExceptionHandler {
         });
         return ResponseEntity.badRequest().body(errors);
     }
-    
+
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, String>> handleGlobalValidationExceptions(ConstraintViolationException  exception) {
         Map<String, String> errors = new HashMap<>();
-        exception.getConstraintViolations().forEach(violation -> 
+        exception.getConstraintViolations().forEach(violation ->
             errors.put(violation.getPropertyPath().toString(), violation.getMessage())
         );
         return ResponseEntity.badRequest().body(errors);
     }
-    
+
     /**
      * Trata exceções de recurso não encontrado
      */
@@ -52,7 +53,7 @@ public class GlobalExceptionHandler {
         errorResponse.put("error", exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
-    
+
     /**
      * Trata exceções genéricas que não foram capturadas pelos handlers anteriores.
      */
@@ -63,5 +64,5 @@ public class GlobalExceptionHandler {
         errorResponse.put("error", "Erro interno no servidor. Entre em contato com o suporte.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
-    
+
 }
