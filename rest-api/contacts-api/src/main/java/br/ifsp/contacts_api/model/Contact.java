@@ -3,6 +3,8 @@ package br.ifsp.contacts_api.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -37,6 +41,7 @@ public class Contact {
 
     @Size(min = 8, max = 15, message = "O telefone deve ter entre 8 e 15 caracteres") // Define o tamanho mínimo e máximo
     @NotBlank(message = "O telefone é obrigatório")
+    @Pattern(regexp = "\\d+", message = "O telefone deve conter apenas números")
     private String telefone;
     
     @Email(message = "O e-mail deve ter um formato válido") // Garante que seja um e-mail válido
@@ -44,6 +49,8 @@ public class Contact {
     private String email;
 
     @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @NotEmpty(message = "O contato deve ter pelo menos um endereço")
     private List<Address> addresses = new ArrayList<>();
 
     // Construtor vazio exigido pelo JPA
@@ -87,6 +94,15 @@ public class Contact {
     }
 
     public void setAddresses(List<Address> addresses) {
-        this.addresses = addresses;
+        if (addresses != null) {
+            addresses.forEach(address -> address.setContact(this)); 
+            
+            if (this.addresses == null) { 
+                this.addresses = new ArrayList<>();
+            }
+            
+            this.addresses.clear(); 
+            this.addresses.addAll(addresses);         
+        }
     }
 }
