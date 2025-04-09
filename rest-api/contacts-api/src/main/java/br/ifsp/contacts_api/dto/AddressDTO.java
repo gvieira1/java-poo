@@ -27,6 +27,23 @@ public class AddressDTO {
 	    @JsonBackReference
 	    private Contact contact;
 
+		
+	    
+		public AddressDTO(@NotBlank(message = "O campo rua não pode estar vazio") String rua,
+				@NotBlank(message = "O campo cidade não pode estar vazio") String cidade,
+				@NotBlank(message = "O campo estado não pode estar vazio") @Size(min = 2, max = 2, message = "O campo estado deve ter exatamente 2 caracteres (sigla)") @Pattern(regexp = "[A-Z]{2}", message = "O estado deve ser representado por duas letras maiúsculas") String estado,
+				@NotBlank(message = "O CEP não pode estar vazio") @Pattern(regexp = "\\d{5}-\\d{3}", message = "O CEP deve estar no formato 99999-999") String cep) {
+			super();
+			this.rua = rua;
+			this.cidade = cidade;
+			this.estado = estado;
+			this.cep = cep;
+		}
+
+		public AddressDTO() {
+			
+		}
+
 		public String getRua() {
 			return rua;
 		}

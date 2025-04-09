@@ -47,11 +47,11 @@ public class AddressService {
 
 	}
 
-	private AddressDTO convertToDTO(Address address) {
+	public AddressDTO convertToDTO(Address address) {
 	    return modelMapper.map(address, AddressDTO.class);
 	}
 
-	private Address convertToEntity(AddressDTO addressDTO) {
+	public Address convertToEntity(AddressDTO addressDTO) {
 	    return modelMapper.map(addressDTO, Address.class);
 	}
 

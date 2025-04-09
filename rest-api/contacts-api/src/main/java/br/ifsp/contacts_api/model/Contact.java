@@ -93,16 +93,18 @@ public class Contact {
         return addresses;
     }
 
-    public void setAddresses(List<Address> addresses) {
-        if (addresses != null) {
-            addresses.forEach(address -> address.setContact(this));
-
+ 
+    public void setAddresses(List<Address> list) {
+        if (list != null) {
             if (this.addresses == null) {
                 this.addresses = new ArrayList<>();
             }
 
             this.addresses.clear();
-            this.addresses.addAll(addresses);
+            this.addresses.addAll(list);
         }
     }
+
+	
+
 }

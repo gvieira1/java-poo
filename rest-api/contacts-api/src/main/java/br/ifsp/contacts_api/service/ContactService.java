@@ -1,6 +1,8 @@
 package br.ifsp.contacts_api.service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +10,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import br.ifsp.contacts_api.dto.ContactDTO;
+import br.ifsp.contacts_api.dto.ContactRequestDTO;
+import br.ifsp.contacts_api.dto.ContactResponseDTO;
 import br.ifsp.contacts_api.exception.ResourceNotFoundException;
+import br.ifsp.contacts_api.model.Address;
 import br.ifsp.contacts_api.model.Contact;
 import br.ifsp.contacts_api.repository.ContactRepository;
 
@@ -22,42 +26,55 @@ public class ContactService {
 	@Autowired
 	private ModelMapper modelMapper;
 
-	public Page<ContactDTO> getAllContacts(Pageable pageable) {
+	public Page<ContactResponseDTO> getAllContacts(Pageable pageable) {
 		return contactRepository.findAll(pageable)
-                .map(this::convertToDTO);
+                .map(this::convertToResponseDTO);
 	}
 
-	public ContactDTO getContactById(Long id) {
+	public ContactResponseDTO getContactById(Long id) {
 		Contact contact =  contactRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Contato não encontrado: " + id));
-		return convertToDTO(contact);
+		return convertToResponseDTO(contact);
 	}
 
-	public Page<ContactDTO> searchContactsByName(String name, Pageable pageable) {
+	public Page<ContactResponseDTO> searchContactsByName(String name, Pageable pageable) {
 		return contactRepository.findByNomeContainingIgnoreCase(name, pageable)
-				.map(this::convertToDTO);
+				.map(this::convertToResponseDTO);
 	}
 
-	public ContactDTO save(ContactDTO contactDTO) {
+	public ContactResponseDTO save(ContactRequestDTO contactDTO) {
 		Contact contact = convertToEntity(contactDTO);
 		Contact savedContact = contactRepository.save(contact);
-		return convertToDTO(savedContact);
+		return convertToResponseDTO(savedContact);
 	}
 
-	public ContactDTO updateContact(Long id, ContactDTO updatedContact) {
-		Contact existingContact = contactRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Contato não encontrado: " + id));
+	
+	public ContactResponseDTO updateContact(Long id, ContactRequestDTO updatedContact) {
+	    Contact existingContact = contactRepository.findById(id)
+	            .orElseThrow(() -> new ResourceNotFoundException("Contato não encontrado: " + id));
 
-		existingContact.setNome(updatedContact.getNome());
-		existingContact.setEmail(updatedContact.getEmail());
-		existingContact.setTelefone(updatedContact.getTelefone());
-		existingContact.setAddresses(updatedContact.getAddresses());
+	    existingContact.setNome(updatedContact.getNome());
+	    existingContact.setEmail(updatedContact.getEmail());
+	    existingContact.setTelefone(updatedContact.getTelefone());
 
-		Contact updated = contactRepository.save(existingContact);
-        return convertToDTO(updated);
+	    if (updatedContact.getAddresses() != null) {
+	        List<Address> addressEntities = updatedContact.getAddresses().stream()
+	                .map(dto -> {
+	                    Address address = modelMapper.map(dto, Address.class);
+	                    address.setContact(existingContact); 
+	                    return address;
+	                })
+	                .collect(Collectors.toList());
+
+	        existingContact.setAddresses(addressEntities);
+	    }
+
+	    Contact updated = contactRepository.save(existingContact);
+	    return convertToResponseDTO(updated);
 	}
 
-	public ContactDTO updateContactPartial(Long id, Map<String, String> updates) {
+
+	public ContactResponseDTO updateContactPartial(Long id, Map<String, String> updates) {
 		Contact contact = contactRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Contato não encontrado: " + id));
 
@@ -72,11 +89,14 @@ public class ContactService {
 			case "email":
 				contact.setEmail(value);
 				break;
+			default:
+			    throw new IllegalArgumentException("Campo não suportado: " + key);
+
 			}
 		});
 
 		Contact updated = contactRepository.save(contact);
-        return convertToDTO(updated);
+        return convertToResponseDTO(updated);
 	}
 
 	public void deleteContact(Long id) {
@@ -86,14 +106,30 @@ public class ContactService {
 		contactRepository.deleteById(id);
 	}
 
-	public ContactDTO convertToDTO(Contact contact) {
+	public ContactResponseDTO convertToResponseDTO(Contact contact) {
 		// Converte Entidade -> DTO
-		return modelMapper.map(contact, ContactDTO.class);
+		return modelMapper.map(contact, ContactResponseDTO.class);
 	}
 
-	public Contact convertToEntity(ContactDTO contactDTO) {
-		// Converte DTO -> Entidade
-		return modelMapper.map(contactDTO, Contact.class);
+	public Contact convertToEntity(ContactRequestDTO contactDTO) {
+	    Contact contact = modelMapper.map(contactDTO, Contact.class);
+
+	    // converte AddressDTO → Address e seta o contact em cada um
+	    if (contactDTO.getAddresses() != null) {
+	        List<Address> addressEntities = contactDTO.getAddresses().stream()
+	            .map(dto -> {
+	                Address address = modelMapper.map(dto, Address.class);
+	                address.setContact(contact); // liga o address ao contact
+	                return address;
+	            })
+	            .collect(Collectors.toList());
+
+	        contact.setAddresses(addressEntities); // seta os endereços convertidos
+	    }
+
+	    return contact;
 	}
+
+
 
 }
